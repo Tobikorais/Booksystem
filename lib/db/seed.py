@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine
 from models import Base, Genre, Book, Review, ReadingStatus
+from database import engine, SessionLocal
 
 def init_db():
     engine = create_engine('sqlite:///bookbuddy.db')
@@ -70,9 +71,66 @@ def seed_db():
     session.commit()
     session.close()
 
+def seed_database():
+    # Create tables
+    Base.metadata.create_all(bind=engine)
+    
+    # Sample books data
+    sample_books = [
+        {
+            "title": "The Great Gatsby",
+            "author": "F. Scott Fitzgerald",
+            "isbn": "9780743273565",
+            "publication_year": 1925
+        },
+        {
+            "title": "To Kill a Mockingbird",
+            "author": "Harper Lee",
+            "isbn": "9780446310789",
+            "publication_year": 1960
+        },
+        {
+            "title": "1984",
+            "author": "George Orwell",
+            "isbn": "9780451524935",
+            "publication_year": 1949
+        },
+        {
+            "title": "Pride and Prejudice",
+            "author": "Jane Austen",
+            "isbn": "9780141439518",
+            "publication_year": 1813
+        },
+        {
+            "title": "The Hobbit",
+            "author": "J.R.R. Tolkien",
+            "isbn": "9780547928227",
+            "publication_year": 1937
+        }
+    ]
+    
+    db = SessionLocal()
+    try:
+        # Check if database is empty
+        if db.query(Book).first() is None:
+            # Add sample books
+            for book_data in sample_books:
+                book = Book(**book_data)
+                db.add(book)
+            db.commit()
+            print("Database seeded successfully!")
+        else:
+            print("Database already contains data. Skipping seed.")
+    except Exception as e:
+        db.rollback()
+        print(f"Error seeding database: {str(e)}")
+    finally:
+        db.close()
+
 if __name__ == "__main__":
     print("Initializing database...")
     init_db()
     print("Seeding database with sample data...")
     seed_db()
     print("Database setup complete!")
+    seed_database()
